@@ -1,0 +1,28 @@
+# ==============================================================================
+# bootc-image-builder Appliance Configuration
+# Target: Custom Fedora AI OS
+# ==============================================================================
+
+[customizations.user.aioperator]
+description = "AI OS Appliance Operator"
+groups = ["wheel", "render", "video"]
+home = "/var/home/aioperator"
+# Default password hash (sha512 crypt) - recommends overriding via SSH key or cloud-init
+password = "$6$rounds=4096$fedoraaios$U5YI9w3M6K7z8V5w9A3x8v6Q4e0R1t2Y3u4I5o6P7a8S9d0F1g2H3j4K5l6Z7x8C9v0B1n2M3q4W5e6R7t8Y9"
+
+[[customizations.user.aioperator.ssh_authorized_keys]]
+key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleOperatorKeyPlaceholderDoNotUseDirectlyInProd operator@fedora-ai-os"
+
+[customizations.kernel]
+arguments = [
+    "quiet",
+    "console=tty0",
+    "console=ttyS0,115200n8",
+    "amdxdna.enable=1",
+    "intel_vpu.enable=1",
+    "systemd.unified_cgroup_hierarchy=1"
+]
+
+[customizations.filesystem]
+# Enforce transactional root filesystem with persistent /var
+root_fs_type = "xfs"
