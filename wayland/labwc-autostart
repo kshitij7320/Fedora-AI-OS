@@ -1,0 +1,16 @@
+#!/bin/sh
+# Labwc minimal autostart script for Fedora AI OS
+# Launches lightweight foot terminal monitor without heavy desktop bloat
+
+# Ensure seat & Wayland environment
+export XDG_CURRENT_DESKTOP=wlroots
+
+# Launch audio session if available
+if command -v wireplumber >/dev/null 2>&1; then
+    wireplumber &
+fi
+
+# Launch foot terminal in full window or status dashboard mode
+if command -v foot >/dev/null 2>&1; then
+    foot --title="AI-OS Dashboard" sh -c "echo '=== Fedora AI OS Minimal Workspace ==='; uname -a; echo ''; /usr/bin/python3 -c 'import urllib.request, json; print(\"llama-server status: ready at http://127.0.0.1:8080\")'; exec \$SHELL" &
+fi

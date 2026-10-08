@@ -1,0 +1,45 @@
+[Unit]
+Description=Sandboxed llama.cpp Local Inference Server
+Documentation=https://github.com/ggerganov/llama.cpp
+After=network.target
+
+[Service]
+Type=exec
+User=llamasrv
+Group=llamasrv
+SupplementaryGroups=render video
+EnvironmentFile=-/etc/llama-server/llama-server.env
+ExecStart=/usr/bin/llama-server --host ${LLAMA_HOST} --port ${LLAMA_PORT} --model-path ${LLAMA_MODELS_DIR} -c ${LLAMA_CTX_SIZE} -ngl ${LLAMA_N_GPU_LAYERS}
+Restart=on-failure
+RestartSec=5s
+
+# Process & Directory Sandboxing
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+NoNewPrivileges=true
+
+# Memory & Acceleration Permissions
+# Vulkan shaders and JIT compilation require executable memory mappings
+MemoryDenyWriteExecute=no
+LimitMEMLOCK=infinity
+
+# Hardware Acceleration Device Isolation
+DevicePolicy=closed
+DeviceAllow=/dev/dri rw
+DeviceAllow=/dev/accel rw
+
+# Persistent Model Storage Access
+ReadWritePaths=/var/lib/models
+RuntimeDirectory=llama-server
+RuntimeDirectoryMode=0755
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
