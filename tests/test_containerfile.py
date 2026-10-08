@@ -32,6 +32,7 @@ class TestContainerfile(unittest.TestCase):
         self.assertIn("llamasrv", self.content)
         self.assertIn("mcpsrv", self.content)
         self.assertIn("render", self.content)
+        self.assertIn("groupadd", self.content)
 
     def test_stateful_directories(self):
         self.assertIn("/var/lib/models", self.content)

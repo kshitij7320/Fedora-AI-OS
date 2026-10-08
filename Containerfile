@@ -63,6 +63,10 @@ RUN set -eux; \
         pciutils \
         iproute \
         util-linux; \
+    # Ensure hardware acceleration and journal groups exist
+    getent group render >/dev/null || groupadd -r render; \
+    getent group video >/dev/null || groupadd -r video; \
+    getent group systemd-journal >/dev/null || groupadd -r systemd-journal; \
     # Purge dnf caches to maximize rootfs layer compression
     dnf clean all; \
     rm -rf /var/cache/dnf/* /var/lib/dnf/history* /var/log/dnf*
@@ -83,6 +87,9 @@ RUN set -eux; \
 
 # 2. Provision unprivileged service accounts with render/video acceleration permissions
 RUN set -eux; \
+    getent group render >/dev/null || groupadd -r render; \
+    getent group video >/dev/null || groupadd -r video; \
+    getent group systemd-journal >/dev/null || groupadd -r systemd-journal; \
     # llama-server service account
     useradd -r -s /sbin/nologin -d /var/lib/models -M -G render,video llamasrv; \
     # linux-mcp-server telemetry service account
