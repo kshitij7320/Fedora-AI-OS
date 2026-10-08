@@ -93,7 +93,6 @@ jobs:
             quay.io/centos-bootc/bootc-image-builder:latest \
             --type "$FORMAT" \
             --config /config.toml \
-            --local \
             "$IMAGE_TAG"
 
       - name: Compute Checksums

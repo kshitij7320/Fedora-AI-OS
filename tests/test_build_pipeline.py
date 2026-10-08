@@ -8,7 +8,8 @@ class TestBuildPipeline(unittest.TestCase):
         self.assertTrue(os.path.isfile(path), f"Missing {path}")
         with open(path, "r") as f:
             content = f.read()
-        self.assertIn("customizations.user.aioperator", content)
+        self.assertIn("[[customizations.user]]", content)
+        self.assertIn('name = "aioperator"', content)
         self.assertIn("wheel", content)
         self.assertIn("render", content)
         self.assertIn("video", content)
