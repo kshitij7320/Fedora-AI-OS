@@ -63,11 +63,12 @@ RUN set -eux; \
         pciutils \
         iproute \
         util-linux; \
-    # Ensure hardware acceleration, admin, and journal groups exist
-    getent group wheel >/dev/null || groupadd -r wheel; \
-    getent group render >/dev/null || groupadd -r render; \
-    getent group video >/dev/null || groupadd -r video; \
-    getent group systemd-journal >/dev/null || groupadd -r systemd-journal; \
+    # Materialize NSS synthesized system groups into /etc/group for shadow-utils compatibility
+    systemd-sysusers || true; \
+    grep -q '^render:' /etc/group || (groupadd -r -g 990 render 2>/dev/null || echo 'render:x:990:' >> /etc/group); \
+    grep -q '^video:' /etc/group || (groupadd -r -g 39 video 2>/dev/null || echo 'video:x:39:' >> /etc/group); \
+    grep -q '^wheel:' /etc/group || (groupadd -r -g 10 wheel 2>/dev/null || echo 'wheel:x:10:' >> /etc/group); \
+    grep -q '^systemd-journal:' /etc/group || (groupadd -r systemd-journal 2>/dev/null || echo 'systemd-journal:x:190:' >> /etc/group); \
     # Purge dnf caches to maximize rootfs layer compression
     dnf clean all; \
     rm -rf /var/cache/dnf/* /var/lib/dnf/history* /var/log/dnf*
@@ -88,10 +89,11 @@ RUN set -eux; \
 
 # 2. Provision unprivileged service accounts with render/video acceleration permissions
 RUN set -eux; \
-    getent group wheel >/dev/null || groupadd -r wheel; \
-    getent group render >/dev/null || groupadd -r render; \
-    getent group video >/dev/null || groupadd -r video; \
-    getent group systemd-journal >/dev/null || groupadd -r systemd-journal; \
+    systemd-sysusers || true; \
+    grep -q '^render:' /etc/group || (groupadd -r -g 990 render 2>/dev/null || echo 'render:x:990:' >> /etc/group); \
+    grep -q '^video:' /etc/group || (groupadd -r -g 39 video 2>/dev/null || echo 'video:x:39:' >> /etc/group); \
+    grep -q '^wheel:' /etc/group || (groupadd -r -g 10 wheel 2>/dev/null || echo 'wheel:x:10:' >> /etc/group); \
+    grep -q '^systemd-journal:' /etc/group || (groupadd -r systemd-journal 2>/dev/null || echo 'systemd-journal:x:190:' >> /etc/group); \
     # llama-server service account
     useradd -r -s /sbin/nologin -d /var/lib/models -M -G render,video llamasrv; \
     # linux-mcp-server telemetry service account
