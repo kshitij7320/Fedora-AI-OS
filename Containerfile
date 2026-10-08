@@ -63,7 +63,8 @@ RUN set -eux; \
         pciutils \
         iproute \
         util-linux; \
-    # Ensure hardware acceleration and journal groups exist
+    # Ensure hardware acceleration, admin, and journal groups exist
+    getent group wheel >/dev/null || groupadd -r wheel; \
     getent group render >/dev/null || groupadd -r render; \
     getent group video >/dev/null || groupadd -r video; \
     getent group systemd-journal >/dev/null || groupadd -r systemd-journal; \
@@ -87,6 +88,7 @@ RUN set -eux; \
 
 # 2. Provision unprivileged service accounts with render/video acceleration permissions
 RUN set -eux; \
+    getent group wheel >/dev/null || groupadd -r wheel; \
     getent group render >/dev/null || groupadd -r render; \
     getent group video >/dev/null || groupadd -r video; \
     getent group systemd-journal >/dev/null || groupadd -r systemd-journal; \
