@@ -30,5 +30,15 @@ class TestBuildPipeline(unittest.TestCase):
         self.assertIn("ai-headless", res.stdout)
         self.assertIn("bootc-image-builder", res.stdout)
 
+    def test_github_actions_workflow(self):
+        path = ".github/workflows/build-iso.yml"
+        self.assertTrue(os.path.isfile(path), f"Missing {path}")
+        with open(path, "r") as f:
+            content = f.read()
+        self.assertIn("Build Bootable AI OS ISO", content)
+        self.assertIn("workflow_dispatch:", content)
+        self.assertIn("bootc-image-builder", content)
+        self.assertIn("upload-artifact", content)
+
 if __name__ == "__main__":
     unittest.main()

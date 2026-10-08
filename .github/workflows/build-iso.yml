@@ -1,0 +1,111 @@
+name: Build Bootable AI OS ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "OS Profile to Build (headless or gui)"
+        required: true
+        default: "headless"
+        type: choice
+        options:
+          - headless
+          - gui
+      format:
+        description: "Target Media Format (iso, qcow2, raw)"
+        required: true
+        default: "iso"
+        type: choice
+        options:
+          - iso
+          - qcow2
+          - raw
+  push:
+    branches:
+      - main
+    paths:
+      - "Containerfile"
+      - "config.toml"
+      - "dnf/**"
+      - "limits.d/**"
+      - "sysctl.d/**"
+      - "systemd/**"
+      - "mcp/**"
+      - "audio/**"
+      - "wayland/**"
+      - ".github/workflows/build-iso.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-bootable-media:
+    name: Build ${{ inputs.target || 'headless' }} (${{ inputs.format || 'iso' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space on Runner
+        run: |
+          echo "Optimizing disk space for bootc-image-builder..."
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          df -h
+
+      - name: Setup Environment Variables
+        run: |
+          TARGET="${{ inputs.target || 'headless' }}"
+          FORMAT="${{ inputs.format || 'iso' }}"
+          if [ "$TARGET" = "gui" ]; then
+            CONTAINER_TARGET="ai-gui"
+          else
+            CONTAINER_TARGET="ai-headless"
+          fi
+          echo "TARGET=$TARGET" >> $GITHUB_ENV
+          echo "FORMAT=$FORMAT" >> $GITHUB_ENV
+          echo "CONTAINER_TARGET=$CONTAINER_TARGET" >> $GITHUB_ENV
+          echo "IMAGE_TAG=localhost/fedora-ai-os:$TARGET" >> $GITHUB_ENV
+
+      - name: Run Test Suite Verification
+        run: |
+          python3 -m unittest discover tests -v
+
+      - name: Validate Configurations (Dry Run)
+        run: |
+          ./build.sh --dry-run --target "$TARGET" --format "$FORMAT"
+
+      - name: Build Bootable Container Rootfs
+        run: |
+          echo "Building container image with target: $CONTAINER_TARGET"
+          sudo podman build --target "$CONTAINER_TARGET" -t "$IMAGE_TAG" .
+
+      - name: Synthesize Bootable Image via bootc-image-builder
+        run: |
+          mkdir -p output
+          echo "Synthesizing $FORMAT image via bootc-image-builder..."
+          sudo podman run --rm --privileged \
+            --security-opt label=type:unconfined_t \
+            -v /var/lib/containers/storage:/var/lib/containers/storage \
+            -v "$(pwd)/config.toml":/config.toml:ro \
+            -v "$(pwd)/output":/output \
+            quay.io/centos-bootc/bootc-image-builder:latest \
+            --type "$FORMAT" \
+            --config /config.toml \
+            --local \
+            "$IMAGE_TAG"
+
+      - name: Compute Checksums
+        run: |
+          cd output
+          find . -type f -name "*.$FORMAT" -exec sha256sum {} + > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Upload Bootable Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fedora-ai-os-${{ env.TARGET }}-${{ env.FORMAT }}
+          path: output/
+          retention-days: 14
+          if-no-files-found: error
