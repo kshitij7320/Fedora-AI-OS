@@ -1,0 +1,34 @@
+[Unit]
+Description=Linux Model Context Protocol (MCP) Read-Only Diagnostic Daemon
+Documentation=man:systemd(1)
+Requires=linux-mcp-server.socket
+After=network.target linux-mcp-server.socket
+
+[Service]
+Type=simple
+User=mcpsrv
+Group=mcpsrv
+SupplementaryGroups=systemd-journal
+ExecStart=/usr/bin/python3 /usr/libexec/linux-mcp-server/linux_mcp_server.py --socket /run/mcp/linux-mcp.sock
+Restart=on-failure
+RestartSec=3s
+
+# Hardened Security & Sandboxing Directives
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+MemoryDenyWriteExecute=yes
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RuntimeDirectory=mcp
+RuntimeDirectoryMode=0755
+StandardOutput=journal
+StandardError=journal
