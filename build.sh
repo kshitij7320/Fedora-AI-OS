@@ -128,6 +128,7 @@ if [[ ${DRY_RUN} -eq 1 ]]; then
     echo "     quay.io/centos-bootc/bootc-image-builder:latest \\"
     echo "     --type ${FORMAT} \\"
     echo "     --config /config.toml \\"
+    echo "     --rootfs xfs \\"
     echo "     ${TAG}"
     echo ""
     echo "3. Sample QEMU Launch Command:"
@@ -158,6 +159,7 @@ podman run --rm --privileged \
     quay.io/centos-bootc/bootc-image-builder:latest \
     --type "${FORMAT}" \
     --config /config.toml \
+    --rootfs xfs \
     "${TAG}"
 
 echo ""

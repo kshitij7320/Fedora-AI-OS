@@ -30,6 +30,7 @@ class TestBuildPipeline(unittest.TestCase):
         self.assertIn("DRY RUN", res.stdout)
         self.assertIn("ai-headless", res.stdout)
         self.assertIn("bootc-image-builder", res.stdout)
+        self.assertIn("--rootfs", res.stdout)
 
     def test_github_actions_workflow(self):
         path = ".github/workflows/build-iso.yml"
@@ -39,6 +40,7 @@ class TestBuildPipeline(unittest.TestCase):
         self.assertIn("Build Bootable AI OS ISO", content)
         self.assertIn("workflow_dispatch:", content)
         self.assertIn("bootc-image-builder", content)
+        self.assertIn("--rootfs", content)
         self.assertIn("upload-artifact", content)
 
 if __name__ == "__main__":
